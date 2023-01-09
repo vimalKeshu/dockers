@@ -1,0 +1,52 @@
+version: "3.0"
+networks:
+  cp-network:
+    external:
+      name: cp-kafka_app-tier
+services:
+  zookeeper:
+    container_name: cp_zookeeper
+    restart: always
+    image: 'confluentinc/cp-zookeeper:5.5.0'
+    ports:
+      - '2181:2181'
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+      - ZOOKEEPER_CLIENT_PORT=2181
+      - ZOOKEEPER_TICK_TIME=2000
+      - ZOOKEEPER_SERVER_ID=1
+      - ZOOKEEPER_SERVERS=zookeeper:22888:23888
+    networks:
+      - cp-network
+  kafka:
+    container_name: cp_kafka
+    image: 'confluentinc/cp-kafka:5.5.0'
+    ports:
+      - '9092:9092'
+      - '9093:9093'
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT_HOST:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9093
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_BROKER_RACK=r1
+      - KAFKA_DELETE_TOPIC_ENABLE=true
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_SCHEMA_REGISTRY_URL=schemaregistry:8085
+      - KAFKA_JMX_PORT=9991
+    depends_on:
+      - zookeeper
+    networks:
+      - cp-network
+  schemaregistry:
+    image: 'confluentinc/cp-schema-registry:5.5.0'
+    restart: always
+    depends_on:
+      - zookeeper
+    environment:
+      - SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL=zookeeper:2181
+      - SCHEMA_REGISTRY_HOST_NAME=schemaregistry
+      - SCHEMA_REGISTRY_LISTENERS=http://0.0.0.0:8085
+    ports:
+      - 8085:8085
