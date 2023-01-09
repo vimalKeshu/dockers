@@ -1,0 +1,50 @@
+version: "3"
+services:
+  alluxio-master:
+    container_name: alluxio-master-1
+    image: alluxio-2.9.0-snapshot-nohelm:latest
+    shm_size: 2GB
+    environment:
+      ALLUXIO_JAVA_OPTS: "-Dalluxio.master.hostname=alluxio-master -Dalluxio.master.mount.table.root.ufs=/opt/alluxio/underFSStorage -Dalluxio.user.file.writetype.default=THROUGH -Dalluxio.job.request.batch.size=1 -Dalluxio.job.worker.threadpool.size=1 -Dalluxio.master.metastore=HEAP -Dalluxio.job.worker.throttling=true"
+    volumes:
+      - /tmp/alluxio_ufs:/opt/alluxio/underFSStorage
+      - /Users/vimal.chaudhari/Documents/cert:/opt/alluxio/secrets
+    command: master
+    # entrypoint: ["tail", "-f", "/dev/null"]
+    # network_mode: host
+    networks:
+      - cp-network
+  alluxio-worker-1:
+    container_name: alluxio-worker-1
+    image: alluxio-2.9.0-snapshot-nohelm:latest
+    shm_size: 2GB
+    environment:
+      ALLUXIO_JAVA_OPTS: "-Dalluxio.worker.ramdisk.size=2GB -Dalluxio.master.hostname=alluxio-master -Dalluxio.worker.hostname=alluxio-worker-1 -Dalluxio.user.file.writetype.default=THROUGH -Dalluxio.job.request.batch.size=1 -Dalluxio.job.worker.threadpool.size=1 -Dalluxio.job.worker.throttling=true"
+    volumes:
+      - /tmp/alluxio_ufs:/opt/alluxio/underFSStorage
+      - /Users/vimal.chaudhari/Documents/cert:/opt/alluxio/secrets
+    # network_mode: host
+    command: worker
+    depends_on:
+      - alluxio-master
+    networks:
+      - cp-network
+  alluxio-worker-2:
+    container_name: alluxio-worker-2
+    image: alluxio-2.9.0-snapshot-nohelm:latest
+    shm_size: 2GB
+    environment:
+      ALLUXIO_JAVA_OPTS: "-Dalluxio.worker.ramdisk.size=2GB -Dalluxio.master.hostname=alluxio-master -Dalluxio.worker.hostname=alluxio-worker-2 -Dalluxio.user.file.writetype.default=THROUGH -Dalluxio.job.request.batch.size=1 -Dalluxio.job.worker.threadpool.size=1 -Dalluxio.job.worker.throttling=true"
+    volumes:
+      - /tmp/alluxio_ufs:/opt/alluxio/underFSStorage
+      - /Users/vimal.chaudhari/Documents/cert:/opt/alluxio/secrets
+    # network_mode: host
+    command: worker
+    depends_on:
+      - alluxio-master
+    networks:
+      - cp-network
+networks:
+  cp-network:
+    external:
+      name: cp-kafka_app-tier

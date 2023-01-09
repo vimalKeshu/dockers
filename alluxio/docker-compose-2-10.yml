@@ -1,0 +1,14 @@
+version: "3"
+services:
+  alluxio-master:
+    container_name: alluxio-master-1
+    image: alluxio-2.10.0-snapshot-nohelm:latest
+    shm_size: 2GB
+    environment:
+      ALLUXIO_JAVA_OPTS: "-Dalluxio.master.hostname=alluxio-master -Dalluxio.master.mount.table.root.ufs=/opt/alluxio/underFSStorage -Dalluxio.user.file.writetype.default=THROUGH -Dalluxio.job.request.batch.size=1 -Dalluxio.job.worker.threadpool.size=1 -Dalluxio.master.metastore=HEAP -Dalluxio.job.worker.throttling=true"
+    volumes:
+      - /tmp/alluxio_ufs:/opt/alluxio/underFSStorage
+      - /Users/vimal.chaudhari/Documents/cert:/opt/alluxio/secrets
+    command: master
+    entrypoint: ["tail", "-f", "/dev/null"]
+    network_mode: host

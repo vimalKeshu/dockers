@@ -1,0 +1,85 @@
+docker run \
+    --net=host \
+    --name=alluxio-master-1-1 \
+    --user alluxio \
+    -v /tmp/alluxio_ufs:/opt/alluxio/underFSStorage \
+    -v $PWD/Documents/cert:/opt/alluxio/secrets \
+    -e ALLUXIO_JAVA_OPTS="-Dalluxio.master.hostname=localhost -Dalluxio.master.mount.table.root.ufs=/opt/alluxio/underFSStorage" \
+    alluxio/alluxio master
+
+docker run \
+    --net=host \
+    --name=alluxio-worker-1-1 \
+    --shm-size=1G \
+    -v /tmp/alluxio_ufs:/opt/alluxio/underFSStorage \
+    -v $PWD/Documents/cert:/opt/alluxio/secrets \
+    -e ALLUXIO_JAVA_OPTS="-Dalluxio.worker.ramdisk.size=1G -Dalluxio.master.hostname=localhost" \
+    alluxio/alluxio worker
+
+export CLIENT_USER=${USER}
+export EXTERNAL_IP=$(ipconfig getifaddr en0)
+
+ash-4.4$ cat conf/
+alluxio-env.sh                    alluxio-site.properties.template  log4j.properties                  metrics.properties.template
+alluxio-env.sh.template           core-site.xml.template            masters                           workers
+bash-4.4$ cat conf/alluxio-env.sh
+export ALLUXIO_JOB_MASTER_JAVA_OPTS="-Dalluxio.master.hostname=${ALLUXIO_MASTER_HOSTNAME} -Xms128g -Xmx128g "
+export ALLUXIO_WORKER_JAVA_OPTS="-Dalluxio.worker.hostname=${ALLUXIO_WORKER_HOSTNAME} -Dalluxio.worker.rpc.port=29999 -Dalluxio.worker.web.port=30000 -Dalluxio.worker.secure.rpc.port=29997 -Dalluxio.user.short.circuit.enabled=false -Dalluxio.worker.container.hostname=${ALLUXIO_WORKER_CONTAINER_HOSTNAME} -Dalluxio.worker.ramdisk.size=507Gi -Dalluxio.worker.tieredstore.levels=3 -Dalluxio.worker.tieredstore.level0.alias=MEM -Dalluxio.worker.tieredstore.level0.dirs.mediumtype=SSD -Dalluxio.worker.tieredstore.level0.dirs.path=/mnt/alluxio-nvme0n1 -Dalluxio.worker.tieredstore.level0.dirs.quota=3TB -Dalluxio.worker.tieredstore.level0.watermark.high.ratio=0.95 -Dalluxio.worker.tieredstore.level0.watermark.low.ratio=0.7 -Dalluxio.worker.tieredstore.level1.alias=SSD -Dalluxio.worker.tieredstore.level1.dirs.mediumtype=SSD -Dalluxio.worker.tieredstore.level1.dirs.path=/mnt/alluxio-nvme1n1 -Dalluxio.worker.tieredstore.level1.dirs.quota=3TB -Dalluxio.worker.tieredstore.level1.watermark.high.ratio=0.95 -Dalluxio.worker.tieredstore.level1.watermark.low.ratio=0.7 -Dalluxio.worker.tieredstore.level2.alias=HDD -Dalluxio.worker.tieredstore.level2.dirs.mediumtype=HDD -Dalluxio.worker.tieredstore.level2.dirs.path=/mnt/alluxio-hdd -Dalluxio.worker.tieredstore.level2.dirs.quota=400GB -Dalluxio.worker.tieredstore.level2.watermark.high.ratio=0.95 -Dalluxio.worker.tieredstore.level2.watermark.low.ratio=0.7 -Dalluxio.job.worker.threadpool.size=60 -Dalluxio.user.network.data.timeout=20min -Dalluxio.worker.network.block.reader.threads.max=3072 -Dalluxio.worker.network.block.writer.threads.max=2048 -Dalluxio.worker.network.netty.boss.threads=1 -Dalluxio.worker.network.netty.worker.threads=192 -Xms384g -Xmx384g "
+export ALLUXIO_JAVA_OPTS="-Dalluxio.license.file=/secrets/alluxio-license/license.json -Dalluxio.hub.agent.rpc.hostname=${ALLUXIO_HUB_AGENT_RPC_HOSTNAME} -Dalluxio.master.hostname=alluxio-master-0 -Dalluxio.master.journal.type=UFS -Dalluxio.master.journal.folder=hdfs://nameservice1/user/datalake/alluxio-prod/journal -Dalluxio.hub.manager.rpc.hostname=alluxio-hub -Dalluxio.job.master.job.capacity=200000 -Dalluxio.job.master.worker.timeout=10sec -Dalluxio.job.worker.threadpool.size=60 -Dalluxio.master.journal.folder=hdfs://nameservice1/user/datalake/alluxio-prod/journal -Dalluxio.master.journal.ufs.option.alluxio.underfs.hdfs.configuration=/secrets/hdfsC5000/core-site.xml:/secrets/hdfsC5000/hdfs-site.xml -Dalluxio.master.metadata.sync.concurrency.level=20 -Dalluxio.master.metadata.sync.executor.pool.size=10 -Dalluxio.master.metadata.sync.ufs.prefetch.pool.size=10 -Dalluxio.master.mount.table.root.option.alluxio.underfs.hdfs.configuration=/secrets/hdfsC5000/core-site.xml:/secrets/hdfsC5000/hdfs-site.xml -Dalluxio.master.mount.table.root.ufs=hdfs://nameservice1/user/datalake/alluxio-prod/root -Dalluxio.master.persistence.blacklist=.spark-staging,.hive-staging,_temporary,_SUCCESS,_delta_log,.tmp -Dalluxio.master.rpc.executor.max.pool.size=10000 -Dalluxio.master.worker.threads.max=10000 -Dalluxio.policy.scan.file.metadata.sync.threads=10 -Dalluxio.security.authentication.type=NOSASL -Dalluxio.security.authorization.permission.enabled=false -Dalluxio.security.authorization.permission.supergroup=datalake -Dalluxio.security.kerberos.server.keytab.file=/secrets/keytab/datalake.keytab -Dalluxio.security.kerberos.server.principal=datalake@C2000.HADOOP.RAKUTEN.COM -Dalluxio.security.login.username=datalake -Dalluxio.security.stale.channel.purge.interval=365d -Dalluxio.security.underfs.hdfs.impersonation.enabled=false -Dalluxio.tmp.dirs=/mnt/alluxio-nvme0n1,/mnt/alluxio-nvme1n1 -Dalluxio.underfs.eventual.consistency.retry.max.num=3 -Dalluxio.user.block.master.client.threads=10000 -Dalluxio.user.file.buffer.bytes=64MB -Dalluxio.user.file.master.client.threads=10000 -Dalluxio.user.file.persist.on.rename=true -Dalluxio.user.file.persistence.initial.wait.time=-1 -Dalluxio.user.file.replication.durable=1 -Dalluxio.user.file.writetype.default=THROUGH -Dalluxio.user.network.data.timeout=20min -Dalluxio.worker.network.block.reader.threads.max=3072 -Dalluxio.worker.network.block.writer.threads.max=2048 -Dalluxio.worker.network.netty.boss.threads=1 -Dalluxio.worker.network.netty.worker.threads=192 -Dalluxio.zookeeper.enabled=false -XX:MinRAMPercentage=60.0 -XX:MaxRAMPercentage=90.0 -XX:+UseG1GC -Dalluxio.metrics.conf.file=/config/metrics/metrics.properties "
+export ALLUXIO_JOB_WORKER_JAVA_OPTS="-Dalluxio.worker.hostname=${ALLUXIO_WORKER_HOSTNAME} -Dalluxio.job.worker.rpc.port=30001 -Dalluxio.job.worker.data.port=30002 -Dalluxio.job.worker.web.port=30003 -Dalluxio.job.worker.threadpool.size=60 -Xms32g -Xmx32g "
+export ALLUXIO_MASTER_JAVA_OPTS="-Dalluxio.master.hostname=${ALLUXIO_MASTER_HOSTNAME} -Dalluxio.master.metastore=HEAP -Xms512g -Xmx512g "
+export ALLUXIO_FUSE_JAVA_OPTS="-Dalluxio.user.hostname=${ALLUXIO_CLIENT_HOSTNAME} -XX:MaxDirectMemorySize=2g "
+bash-4.4$ 
+
+
+java \
+-cp \
+/opt/alluxio/conf/::/opt/alluxio/assembly/alluxio-server-2.8.0-1.jar \
+-Dalluxio.logger.type=USER_LOGGER \
+-Dalluxio.master.hostname=alluxio-master \
+-Dalluxio.master.mount.table.root.ufs=/opt/alluxio/underFSStorage \
+-Dalluxio.master.mount.table.root.shared=true \
+-Dalluxio.security.authorization.permission.enabled=false \
+-Dalluxio.home=/opt/alluxio-2.8.0-1-noHelm \
+-Dalluxio.conf.dir=/opt/alluxio-2.8.0-1-noHelm/conf \
+-Dalluxio.logs.dir=/opt/alluxio-2.8.0-1-noHelm/logs \
+-Dalluxio.user.logs.dir=/opt/alluxio-2.8.0-1-noHelm/logs/user \
+-Dalluxio.master.hostname=alluxio-master \
+-Dlog4j.configuration=file:/opt/alluxio-2.8.0-1-noHelm/conf/log4j.properties \
+-Dorg.apache.jasper.compiler.disablejsr199=true \
+-Djava.net.preferIPv4Stack=true \
+-Dorg.apache.ratis.thirdparty.io.netty.allocator.useCacheForAllThreads=false \
+-Dalluxio.logger.type=Console \
+alluxio.cli.Format master
+
+
+
+alluxio fs mount \
+        --option alluxio.underfs.gcs.version=2 \
+        --option fs.gcs.credential.path=/opt/alluxio/secrets/stg-gcp-key.json \
+        --option alluxio.user.file.metadata.sync.interval=0 \
+        /test_db/ gs://test-dev/user/datalake/test_db/
+
+
+alluxio fs distributedCp \
+/test_db/test_table_1/group_id=596/spdb_ver=2022-08-29_064140/ \
+/test_db/test_table_1/group_id=596/spdb_ver=2022-08-29_060000/
+
+alluxio fs rm -R -U /test_db/test_table_1/*
+alluxio fs distributedCp \
+/test_db/default_tests_files/ \
+/test_db/test_table_1/
+
+test-dev/user/datalake/test_db/default_tests_files
+
+test-dev/user/datalake/test_db/test_table_1/group_id=596/spdb_ver=2022-08-29_064140/
+
+
+keytool -importcert -alias google_cert -file /opt/alluxio/secrets/google.cer -keystore /etc/ssl/certs/java/cacerts
+
+keytool -importcert -alias gc1 -file /opt/alluxio/secrets/certadmin.cer -keystore $JAVA_HOME/jre/lib/security/cacerts -storepass changeit
+keytool -importcert -alias gc2 -file "/opt/alluxio/secrets/ca.rak.goskope.com.cer"  -keystore $JAVA_HOME/jre/lib/security/cacerts -storepass changeit
+keytool -importcert -alias gc3 -file "/opt/alluxio/secrets/*.console.cloud.google.com.cer"  -keystore $JAVA_HOME/jre/lib/security/cacerts -storepass changeit
+
+
+
